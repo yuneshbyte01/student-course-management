@@ -1,5 +1,6 @@
 package com.yuneshtimsina.studentcoursemanagement.controller;
 
+import com.yuneshtimsina.studentcoursemanagement.model.Course;
 import com.yuneshtimsina.studentcoursemanagement.model.Student;
 import com.yuneshtimsina.studentcoursemanagement.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,5 +57,14 @@ public class StudentController {
     public ResponseEntity<Student> getStudentByEmail(@RequestParam String email) {
         Student student = studentService.findByEmail(email);
         return ResponseEntity.ok(student);
+    }
+
+    @GetMapping("/{id}/courses")
+    public ResponseEntity<List<Course>> getCoursesForStudent(@PathVariable int id) {
+        List<Course> courses = studentService.getCoursesForStudent(id);
+        if (courses.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(courses);
     }
 }

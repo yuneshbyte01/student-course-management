@@ -1,6 +1,9 @@
 package com.yuneshtimsina.studentcoursemanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "students")
@@ -12,12 +15,11 @@ public class Student {
     private String name;
     private String email;
 
-    public Student() {}
+    @OneToMany(mappedBy = "student")
+    @JsonManagedReference
+    private List<Enrollment> enrollments;
 
-    public Student(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
+    public Student() {}
 
     // Getters and Setters
     public int getId() {
@@ -37,6 +39,12 @@ public class Student {
     }
     public void setEmail(String email) {
         this.email = email;
+    }
+    public List<Enrollment> getEnrollments() {
+        return enrollments;
+    }
+    public void setEnrollments(List<Enrollment> enrollments) {
+        this.enrollments = enrollments;
     }
 
     @Override

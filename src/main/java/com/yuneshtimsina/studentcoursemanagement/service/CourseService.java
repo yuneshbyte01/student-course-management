@@ -2,6 +2,8 @@ package com.yuneshtimsina.studentcoursemanagement.service;
 
 import com.yuneshtimsina.studentcoursemanagement.exception.EntityNotFoundException;
 import com.yuneshtimsina.studentcoursemanagement.model.Course;
+import com.yuneshtimsina.studentcoursemanagement.model.Enrollment;
+import com.yuneshtimsina.studentcoursemanagement.model.Student;
 import com.yuneshtimsina.studentcoursemanagement.repository.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,5 +65,12 @@ public class CourseService {
         if (course.getTitle() == null || course.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("Course title must not be empty.");
         }
+    }
+
+    public List<Student> getStudentsForCourse(int courseId) {
+        Course course = getCourseById(courseId);
+        return course.getEnrollments().stream()
+                .map(Enrollment::getStudent)
+                .toList();
     }
 }

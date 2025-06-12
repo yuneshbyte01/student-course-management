@@ -1,6 +1,7 @@
 package com.yuneshtimsina.studentcoursemanagement.controller;
 
 import com.yuneshtimsina.studentcoursemanagement.model.Course;
+import com.yuneshtimsina.studentcoursemanagement.model.Student;
 import com.yuneshtimsina.studentcoursemanagement.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -59,5 +60,14 @@ public class CourseController {
     public ResponseEntity<Course> getCourseById(@PathVariable int id) {
         Course course = courseService.getCourseById(id);
         return ResponseEntity.ok(course);
+    }
+
+    @GetMapping("/{id}/students")
+    public ResponseEntity<List<Student>> getStudentsForCourse(@PathVariable int id) {
+        List<Student> students = courseService.getStudentsForCourse(id);
+        if (students.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(students);
     }
 }

@@ -1,6 +1,8 @@
 package com.yuneshtimsina.studentcoursemanagement.service;
 
 import com.yuneshtimsina.studentcoursemanagement.exception.EntityNotFoundException;
+import com.yuneshtimsina.studentcoursemanagement.model.Course;
+import com.yuneshtimsina.studentcoursemanagement.model.Enrollment;
 import com.yuneshtimsina.studentcoursemanagement.model.Student;
 import com.yuneshtimsina.studentcoursemanagement.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +75,13 @@ public class StudentService {
                 throw new IllegalArgumentException("Email '" + email + "' is already in use.");
             }
         });
+    }
+
+    public List<Course> getCoursesForStudent(int studentId) {
+        Student student = getStudentById(studentId);
+        return student.getEnrollments().stream()
+                .map(Enrollment::getCourse)
+                .toList();
     }
 
 }
