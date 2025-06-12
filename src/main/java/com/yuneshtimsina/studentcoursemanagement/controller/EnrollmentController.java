@@ -1,14 +1,9 @@
 package com.yuneshtimsina.studentcoursemanagement.controller;
 
-import com.yuneshtimsina.studentcoursemanagement.model.Course;
 import com.yuneshtimsina.studentcoursemanagement.model.Enrollment;
-import com.yuneshtimsina.studentcoursemanagement.model.Student;
-import com.yuneshtimsina.studentcoursemanagement.repository.CourseRepository;
-import com.yuneshtimsina.studentcoursemanagement.repository.EnrollmentRepository;
-import com.yuneshtimsina.studentcoursemanagement.repository.StudentRepository;
+import com.yuneshtimsina.studentcoursemanagement.service.EnrollmentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,66 +13,49 @@ import java.util.Optional;
 @RequestMapping("/enrollments")
 public class EnrollmentController {
 
-    private final EnrollmentRepository enrollmentRepository;
-    private final StudentRepository studentRepository;
-    private final CourseRepository courseRepository;
+    private final EnrollmentService enrollmentService;
 
     @Autowired
-    public EnrollmentController(
-            EnrollmentRepository enrollmentRepository,
-            StudentRepository studentRepository,
-            CourseRepository courseRepository
-    ) {
-        this.enrollmentRepository = enrollmentRepository;
-        this.studentRepository = studentRepository;
-        this.courseRepository = courseRepository;
+    public EnrollmentController(EnrollmentService enrollmentService) {
+        this.enrollmentService = enrollmentService;
     }
 
     @PostMapping
-    public ResponseEntity<?> enrollStudent(@RequestParam int studentId, @RequestParam int courseId) {
-        Optional<Student> studentOpt = studentRepository.findById(studentId);
-        Optional<Course> courseOpt = courseRepository.findById(courseId);
+    public ResponseEntity<String> enrollStudent(@RequestParam int studentId, @RequestParam int courseId) {
+        Optional<String> result = enrollmentService.enrollStudent(studentId, courseId);
 
-        if (studentOpt.isEmpty()) {
-            return new ResponseEntity<>("Student with ID " + studentId + " not found.", HttpStatus.NOT_FOUND);
+        if (result.isPresent()) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(result.get());
         }
 
-        if (courseOpt.isEmpty()) {
-            return new ResponseEntity<>("Course with ID " + courseId + " not found.", HttpStatus.NOT_FOUND);
-        }
-
-        try {
-            Enrollment enrollment = new Enrollment(studentOpt.get(), courseOpt.get());
-            enrollmentRepository.save(enrollment);
-            return new ResponseEntity<>("Enrolled successfully!", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Server error during enrollment.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body("Student enrolled successfully.");
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllEnrollments() {
-        try {
-            List<Enrollment> enrollments = enrollmentRepository.findAll();
-            if (enrollments.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-            return new ResponseEntity<>(enrollments, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<List<Enrollment>> getAllEnrollments() {
+        List<Enrollment> enrollments = enrollmentService.getAllEnrollments();
+
+        if (enrollments.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
+
+        return ResponseEntity.ok(enrollments);
     }
 
     @GetMapping("/check-enrollment")
     public ResponseEntity<?> isStudentEnrolled(@RequestParam int studentId, @RequestParam int courseId) {
         try {
-            boolean exists = enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId);
-            return new ResponseEntity<>(exists, HttpStatus.OK);
+            boolean enrolled = enrollmentService.isEnrolled(studentId, courseId);
+            return ResponseEntity.ok(enrolled);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>("Server error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Server error: " + e.getMessage());
         }
     }
-
-
-
 }
