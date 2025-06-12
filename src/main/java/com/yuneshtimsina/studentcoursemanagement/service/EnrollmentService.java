@@ -1,5 +1,6 @@
 package com.yuneshtimsina.studentcoursemanagement.service;
 
+import com.yuneshtimsina.studentcoursemanagement.exception.EntityNotFoundException;
 import com.yuneshtimsina.studentcoursemanagement.model.Course;
 import com.yuneshtimsina.studentcoursemanagement.model.Enrollment;
 import com.yuneshtimsina.studentcoursemanagement.model.Student;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EnrollmentService {
@@ -29,30 +29,23 @@ public class EnrollmentService {
         this.courseRepository = courseRepository;
     }
 
-    public Optional<String> enrollStudent(int studentId, int courseId) {
-
+    public void enrollStudent(int studentId, int courseId) {
         if (studentId <= 0 || courseId <= 0) {
-            return Optional.of("Invalid student or course ID.");
+            throw new IllegalArgumentException("Student ID and Course ID must be positive integers.");
         }
 
-        Optional<Student> studentOpt = studentRepository.findById(studentId);
-        if (studentOpt.isEmpty()) {
-            return Optional.of("Student with ID " + studentId + " not found.");
-        }
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new EntityNotFoundException("Student with ID " + studentId + " not found."));
 
-        Optional<Course> courseOpt = courseRepository.findById(courseId);
-        if (courseOpt.isEmpty()) {
-            return Optional.of("Course with ID " + courseId + " not found.");
-        }
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException("Course with ID " + courseId + " not found."));
 
         if (enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId)) {
-            return Optional.of("Student is already enrolled in this course.");
+            throw new IllegalArgumentException("Student is already enrolled in this course.");
         }
 
-        Enrollment enrollment = new Enrollment(studentOpt.get(), courseOpt.get());
+        Enrollment enrollment = new Enrollment(student, course);
         enrollmentRepository.save(enrollment);
-
-        return Optional.empty();
     }
 
     public List<Enrollment> getAllEnrollments() {
@@ -61,7 +54,7 @@ public class EnrollmentService {
 
     public boolean isEnrolled(int studentId, int courseId) {
         if (studentId <= 0 || courseId <= 0) {
-            throw new IllegalArgumentException("Invalid student or course ID.");
+            throw new IllegalArgumentException("Student ID and Course ID must be positive integers.");
         }
         return enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId);
     }

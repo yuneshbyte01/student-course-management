@@ -7,7 +7,6 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/courses")
@@ -30,38 +29,21 @@ public class CourseController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createCourse(@RequestBody Course course) {
-        try {
-            Course saved = courseService.createCourse(course);
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return new ResponseEntity<>("Failed to create course.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Course> createCourse(@RequestBody Course course) {
+        Course saved = courseService.createCourse(course);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCourse(@PathVariable int id, @RequestBody Course updatedCourse) {
-        try {
-            Optional<Course> updated = courseService.updateCourse(id, updatedCourse);
-            return updated
-                    .<ResponseEntity<?>>map(course -> ResponseEntity.ok(course))
-                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course not found."));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update course.");
-        }
+    public ResponseEntity<Course> updateCourse(@PathVariable int id, @RequestBody Course updatedCourse) {
+        Course updated = courseService.updateCourse(id, updatedCourse);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteCourse(@PathVariable int id) {
-        if (courseService.deleteCourse(id)) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Course deleted successfully.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course not found.");
-        }
+    public ResponseEntity<Void> deleteCourse(@PathVariable int id) {
+        courseService.deleteCourse(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/searchByTitle")
@@ -74,10 +56,8 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCourseById(@PathVariable int id) {
-        Optional<Course> course = courseService.getCourseById(id);
-        return course
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course not found."));
+    public ResponseEntity<Course> getCourseById(@PathVariable int id) {
+        Course course = courseService.getCourseById(id);
+        return ResponseEntity.ok(course);
     }
 }

@@ -1,12 +1,12 @@
 package com.yuneshtimsina.studentcoursemanagement.service;
 
+import com.yuneshtimsina.studentcoursemanagement.exception.EntityNotFoundException;
 import com.yuneshtimsina.studentcoursemanagement.model.Course;
 import com.yuneshtimsina.studentcoursemanagement.repository.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CourseService {
@@ -25,38 +25,38 @@ public class CourseService {
     public Course createCourse(Course course) {
         validateCourse(course);
 
-        // Optional: Enforce unique title
-        // if (!courseRepository.findByTitleContainingIgnoreCase(course.getTitle()).isEmpty()) {
-        //     throw new IllegalArgumentException("Course with a similar title already exists.");
-        // }
+        if (courseRepository.existsByTitleIgnoreCase(course.getTitle())) {
+            throw new IllegalArgumentException("Course with title '" + course.getTitle() + "' already exists.");
+        }
 
         return courseRepository.save(course);
     }
 
-    public Optional<Course> updateCourse(int id, Course updatedCourse) {
+    public Course updateCourse(int id, Course updatedCourse) {
         validateCourse(updatedCourse);
 
-        return courseRepository.findById(id).map(course -> {
-            course.setTitle(updatedCourse.getTitle());
-            course.setDescription(updatedCourse.getDescription());
-            return courseRepository.save(course);
-        });
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Course not found with ID " + id));
+
+        course.setTitle(updatedCourse.getTitle());
+        course.setDescription(updatedCourse.getDescription());
+        return courseRepository.save(course);
     }
 
-    public boolean deleteCourse(int id) {
-        if (courseRepository.existsById(id)) {
-            courseRepository.deleteById(id);
-            return true;
+    public void deleteCourse(int id) {
+        if (!courseRepository.existsById(id)) {
+            throw new EntityNotFoundException("Course not found with ID " + id);
         }
-        return false;
+        courseRepository.deleteById(id);
     }
 
     public List<Course> searchCoursesByTitle(String title) {
         return courseRepository.findByTitleContainingIgnoreCase(title);
     }
 
-    public Optional<Course> getCourseById(int id) {
-        return courseRepository.findById(id);
+    public Course getCourseById(int id) {
+        return courseRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Course not found with ID " + id));
     }
 
     private void validateCourse(Course course) {
