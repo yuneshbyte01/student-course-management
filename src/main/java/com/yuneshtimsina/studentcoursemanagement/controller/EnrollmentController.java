@@ -68,5 +68,16 @@ public class EnrollmentController {
         }
     }
 
+    @GetMapping("/check-enrollment")
+    public ResponseEntity<?> isStudentEnrolled(@RequestParam int studentId, @RequestParam int courseId) {
+        try {
+            boolean exists = enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId);
+            return new ResponseEntity<>(exists, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Server error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 
 }

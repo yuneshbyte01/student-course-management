@@ -20,7 +20,6 @@ public class StudentController {
         this.studentRepository = studentRepository;
     }
 
-    // GET /students — List all students
     @GetMapping
     public ResponseEntity<List<Student>> getAllStudents() {
         try {
@@ -34,7 +33,6 @@ public class StudentController {
         }
     }
 
-    // POST /students — Create a new student
     @PostMapping
     public ResponseEntity<?> createStudent(@RequestBody Student student) {
         try {
@@ -45,7 +43,6 @@ public class StudentController {
         }
     }
 
-    // PUT /students/{id} — Update an existing student
     @PutMapping("/{id}")
     public ResponseEntity<?> updateStudent(@PathVariable int id, @RequestBody Student updatedStudent) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
@@ -60,7 +57,6 @@ public class StudentController {
         }
     }
 
-    // DELETE /students/{id} — Delete a student
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteStudent(@PathVariable int id) {
         try {
@@ -74,4 +70,19 @@ public class StudentController {
             return new ResponseEntity<>("Error deleting student.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/searchByEmail")
+    public ResponseEntity<?> getStudentByEmail(@RequestParam String email) {
+        try {
+            Optional<Student> studentOpt = studentRepository.findByEmail(email);
+            if (studentOpt.isPresent()) {
+                return new ResponseEntity<>(studentOpt.get(), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("No student found with email: " + email, HttpStatus.NO_CONTENT);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Server error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

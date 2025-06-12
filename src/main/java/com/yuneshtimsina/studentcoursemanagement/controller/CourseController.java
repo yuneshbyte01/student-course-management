@@ -20,7 +20,6 @@ public class CourseController {
         this.courseRepository = courseRepository;
     }
 
-    // GET /courses — List all courses
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
         try {
@@ -34,7 +33,6 @@ public class CourseController {
         }
     }
 
-    // POST /courses — Add a new course
     @PostMapping
     public ResponseEntity<?> createCourse(@RequestBody Course course) {
         try {
@@ -45,7 +43,6 @@ public class CourseController {
         }
     }
 
-    // PUT /courses/{id} — Update a course
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCourse(@PathVariable int id, @RequestBody Course updatedCourse) {
         Optional<Course> optionalCourse = courseRepository.findById(id);
@@ -60,7 +57,6 @@ public class CourseController {
         }
     }
 
-    // DELETE /courses/{id} — Delete a course
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCourse(@PathVariable int id) {
         try {
@@ -74,4 +70,18 @@ public class CourseController {
             return new ResponseEntity<>("Error deleting course.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/searchByTitle")
+    public ResponseEntity<List<Course>> searchCoursesByTitle(@RequestParam String title) {
+        try {
+            List<Course> courses = courseRepository.findByTitleContainingIgnoreCase(title);
+            if (courses.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(courses, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
