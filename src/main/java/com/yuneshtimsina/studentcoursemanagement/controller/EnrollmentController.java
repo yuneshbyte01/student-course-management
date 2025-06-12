@@ -7,6 +7,7 @@ import com.yuneshtimsina.studentcoursemanagement.repository.CourseRepository;
 import com.yuneshtimsina.studentcoursemanagement.repository.EnrollmentRepository;
 import com.yuneshtimsina.studentcoursemanagement.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,33 +34,38 @@ public class EnrollmentController {
     }
 
     @PostMapping
-    public ResponseEntity<String> enrollStudent(@RequestParam int studentId, @RequestParam int courseId) {
+    public ResponseEntity<?> enrollStudent(@RequestParam int studentId, @RequestParam int courseId) {
         Optional<Student> studentOpt = studentRepository.findById(studentId);
         Optional<Course> courseOpt = courseRepository.findById(courseId);
 
         if (studentOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Student with ID " + studentId + " does not exist.");
+            return new ResponseEntity<>("Student with ID " + studentId + " not found.", HttpStatus.NOT_FOUND);
         }
 
         if (courseOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Course with ID " + courseId + " does not exist.");
+            return new ResponseEntity<>("Course with ID " + courseId + " not found.", HttpStatus.NOT_FOUND);
         }
 
-        Student student = studentOpt.get();
-        Course course = courseOpt.get();
-
-        Enrollment enrollment = new Enrollment();
-        enrollment.setStudent(student);
-        enrollment.setCourse(course);
-
-        enrollmentRepository.save(enrollment);
-
-        return ResponseEntity.ok("Student " + studentId + " enrolled in course " + courseId + " successfully.");
+        try {
+            Enrollment enrollment = new Enrollment(studentOpt.get(), courseOpt.get());
+            enrollmentRepository.save(enrollment);
+            return new ResponseEntity<>("Enrolled successfully!", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Server error during enrollment.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping
-    public List<Enrollment> getAllEnrollments() {
-        return enrollmentRepository.findAll();
+    public ResponseEntity<?> getAllEnrollments() {
+        try {
+            List<Enrollment> enrollments = enrollmentRepository.findAll();
+            if (enrollments.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(enrollments, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 

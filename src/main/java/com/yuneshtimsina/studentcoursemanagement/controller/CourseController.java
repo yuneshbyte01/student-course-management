@@ -3,7 +3,7 @@ package com.yuneshtimsina.studentcoursemanagement.controller;
 import com.yuneshtimsina.studentcoursemanagement.model.Course;
 import com.yuneshtimsina.studentcoursemanagement.repository.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,40 +20,58 @@ public class CourseController {
         this.courseRepository = courseRepository;
     }
 
-    // GET /courses — list all courses
+    // GET /courses — List all courses
     @GetMapping
-    public List<Course> getAllCourses() {
-        return courseRepository.findAll();
+    public ResponseEntity<List<Course>> getAllCourses() {
+        try {
+            List<Course> courses = courseRepository.findAll();
+            if (courses.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(courses, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    // POST /courses — add a new course
+    // POST /courses — Add a new course
     @PostMapping
-    public Course createCourse(@RequestBody Course course) {
-        return courseRepository.save(course);
+    public ResponseEntity<?> createCourse(@RequestBody Course course) {
+        try {
+            Course saved = courseRepository.save(course);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to create course.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    // PUT /courses/{id} — update a course
+    // PUT /courses/{id} — Update a course
     @PutMapping("/{id}")
-    public ResponseEntity<Course> updateCourse(@PathVariable int id, @RequestBody Course updatedCourse) {
+    public ResponseEntity<?> updateCourse(@PathVariable int id, @RequestBody Course updatedCourse) {
         Optional<Course> optionalCourse = courseRepository.findById(id);
+
         if (optionalCourse.isPresent()) {
             Course course = optionalCourse.get();
             course.setTitle(updatedCourse.getTitle());
             course.setDescription(updatedCourse.getDescription());
-            return ResponseEntity.ok(courseRepository.save(course));
+            return new ResponseEntity<>(courseRepository.save(course), HttpStatus.OK);
         } else {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>("Course not found.", HttpStatus.NOT_FOUND);
         }
     }
 
-    // DELETE /courses/{id} — delete a course
+    // DELETE /courses/{id} — Delete a course
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCourse(@PathVariable int id) {
-        if (courseRepository.existsById(id)) {
-            courseRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<String> deleteCourse(@PathVariable int id) {
+        try {
+            if (courseRepository.existsById(id)) {
+                courseRepository.deleteById(id);
+                return new ResponseEntity<>("Course deleted successfully.", HttpStatus.NO_CONTENT);
+            } else {
+                return new ResponseEntity<>("Course not found.", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error deleting course.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

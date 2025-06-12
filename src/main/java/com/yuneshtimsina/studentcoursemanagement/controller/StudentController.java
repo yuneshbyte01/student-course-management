@@ -3,7 +3,7 @@ package com.yuneshtimsina.studentcoursemanagement.controller;
 import com.yuneshtimsina.studentcoursemanagement.model.Student;
 import com.yuneshtimsina.studentcoursemanagement.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,43 +20,58 @@ public class StudentController {
         this.studentRepository = studentRepository;
     }
 
-    //GET /students
+    // GET /students — List all students
     @GetMapping
-    public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+    public ResponseEntity<List<Student>> getAllStudents() {
+        try {
+            List<Student> students = studentRepository.findAll();
+            if (students.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(students, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    //POST /students
+    // POST /students — Create a new student
     @PostMapping
-    public Student createStudent(@RequestBody Student student) {
-        return studentRepository.save(student);
+    public ResponseEntity<?> createStudent(@RequestBody Student student) {
+        try {
+            Student saved = studentRepository.save(student);
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to create student.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    //PUT /students/{id}
+    // PUT /students/{id} — Update an existing student
     @PutMapping("/{id}")
-    public ResponseEntity<Student> updateStudent(@PathVariable int id, @RequestBody Student updatedStudent) {
+    public ResponseEntity<?> updateStudent(@PathVariable int id, @RequestBody Student updatedStudent) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
 
         if (optionalStudent.isPresent()) {
             Student student = optionalStudent.get();
             student.setName(updatedStudent.getName());
             student.setEmail(updatedStudent.getEmail());
-            return ResponseEntity.ok(studentRepository.save(student));
+            return new ResponseEntity<>(studentRepository.save(student), HttpStatus.OK);
         } else {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>("Student not found.", HttpStatus.NOT_FOUND);
         }
     }
 
-    //DELETE /students/{id}
+    // DELETE /students/{id} — Delete a student
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable int id) {
-        if (studentRepository.existsById(id)) {
-            studentRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<String> deleteStudent(@PathVariable int id) {
+        try {
+            if (studentRepository.existsById(id)) {
+                studentRepository.deleteById(id);
+                return new ResponseEntity<>("Student deleted successfully.", HttpStatus.NO_CONTENT);
+            } else {
+                return new ResponseEntity<>("Student not found.", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error deleting student.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
-
-
