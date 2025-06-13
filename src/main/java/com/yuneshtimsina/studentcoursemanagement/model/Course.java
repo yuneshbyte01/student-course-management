@@ -16,7 +16,7 @@ public class Course {
     private String description;
 
     @OneToMany(mappedBy = "course")
-    @JsonManagedReference
+    @JsonManagedReference("course-enrollments")
     private List<Enrollment> enrollments;
 
     public Course() {}

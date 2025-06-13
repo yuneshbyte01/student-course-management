@@ -10,13 +10,13 @@ import java.util.List;
 public class Student {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Add this to auto-generate IDs
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
     private String email;
 
     @OneToMany(mappedBy = "student")
-    @JsonManagedReference
+    @JsonManagedReference("student-enrollments")
     private List<Enrollment> enrollments;
 
     public Student() {}
